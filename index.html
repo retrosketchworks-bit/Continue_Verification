@@ -1,52 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="referrer" content="no-referrer" />
-<title>Loading...</title>
+<title>Doorgaan</title>
+
 <style>
-  body{margin:0;background:#f5f5f7;}
-  #warn{display:none;color:#b33;font-family:Arial;padding:20px;text-align:center;}
+  body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background:#f5f5f7;
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .box{
+    background:white;
+    padding:28px;
+    width:100%;
+    max-width:480px;
+    border-radius:12px;
+    box-shadow:0 8px 35px rgba(0,0,0,0.09);
+  }
+  .spinner{
+    width:48px;
+    height:48px;
+    border:4px solid #ccc;
+    border-top-color:#007bff;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+    margin:20px auto;
+  }
+  @keyframes spin{ to{transform:rotate(360deg);} }
+  .btn{
+    margin-top:10px;
+    padding:12px 22px;
+    background:#007bff;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:600;
+  }
+  .btn[disabled]{ background:#b8cfff; cursor:not-allowed; }
+  .warning{ margin-top:12px; color:#b33; display:none; }
 </style>
 </head>
 
 <body>
-<div id="warn"></div>
+<div class="box">
+    <div class="spinner"></div>
+    <button class="btn" disabled id="goBtn">Doorgaan</button>
+    <div class="warning" id="warn"></div>
+</div>
 
 <script>
 (function(){
 
-  // Random generator
-  function r(n){
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    let out = "";
-    for(let i=0;i<n;i++){
-      out += chars[Math.floor(Math.random()*chars.length)];
-    }
-    return out;
-  }
+  const TARGET = "https://www.therebths.com/9HF976T/2RCP16WK/";
+  const goBtn = document.getElementById("goBtn");
+  const warn  = document.getElementById("warn");
 
-  // Generate random subs
-  const sub1 = r(12);
-  const sub2 = r(12);
-  const sub3 = r(12);
-  const sub4 = r(12);
-  const sub5 = r(12);
+  let interacted = false;
+  let movementScore = 0;
+  let chaosScore = 0;
+  let interactionTime = null;
 
-  const TARGET =
-    "https://www.therebths.com/9HF976T/2RCP16WK/"
-    + "?source_id=" + r(8)
-    + "&sub1=" + sub1
-    + "&sub2=" + sub2
-    + "&sub3=" + sub3
-    + "&sub4=" + sub4
-    + "&sub5=" + sub5;
-
-  let interacted = false, movementScore = 0, chaosScore = 0, interactionTime = null;
-  const warn = document.getElementById("warn");
-
-  // Environment check
+  // ❌ Blokkeer headless / webdriver
   function envSuspicious(){
     const ua = navigator.userAgent;
     if (navigator.webdriver) return true;
@@ -54,45 +78,64 @@
     return false;
   }
 
-  // Human pattern detection
+  // 🧠 Complexe menselijke score evaluatie
   function evaluateHumanity(){
     const elapsed = Date.now() - interactionTime;
+
+    // moet minstens 500ms muis of aanraking
     if (elapsed < 500) return false;
+
+    // natuurlijke menselijke willekeur
     if (movementScore < 12) return false;
     if (chaosScore < 4) return false;
+
     return true;
   }
 
   function recordMouseMove(e){
     interacted = true;
+
     if (!interactionTime) interactionTime = Date.now();
+
     movementScore++;
+
+    // chaos bijhouden
     const randomness = Math.random() * e.movementX + Math.random() * e.movementY;
     if (randomness % 3 !== 0) chaosScore++;
   }
 
+  // aanraking detectie
   function recordTouch(e){
     interacted = true;
+
     if (!interactionTime) interactionTime = Date.now();
+
     movementScore++;
+
     if (e.touches && e.touches[0]){
-      const p = e.touches[0].force || 0.2;
+      const p = e.touches[0].force || 0.2; // veel apparaten geven 0 → behandel als laag
       if (p > 0.15 && p < 0.9) chaosScore++;
     }
   }
 
+  // controleer elke 250ms
   setInterval(()=>{
     if (envSuspicious()){
       warn.style.display = "block";
-      warn.textContent = "Suspicious browser environment detected.";
+      warn.textContent = "Verdachte browseromgeving gedetecteerd.";
       return;
     }
+
     if (interacted && evaluateHumanity()){
-      window.location.href = TARGET;
+      goBtn.disabled = false;
     }
   }, 250);
 
-  // listeners
+  goBtn.onclick = () => {
+    if (!goBtn.disabled) window.location.href = TARGET;
+  };
+
+  // event listeners
   window.addEventListener("mousemove", recordMouseMove, {passive:true});
   window.addEventListener("touchstart", recordTouch, {passive:true});
   window.addEventListener("touchmove", recordTouch, {passive:true});
