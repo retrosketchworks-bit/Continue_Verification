@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="referrer" content="no-referrer" />
+  <meta charset="utf-8">
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
-
 <body>
 
-<script>
-  window.location.href = "https://www.therebths.com/9HF976T/2X39ZNBW/?source_id=15&sub1=6&sub2=2026";
-</script>
+<form action="/api/verify" method="POST">
+  <div class="g-recaptcha" data-sitekey="SITE_KEY_HERE"></div>
+  <br>
+  <button type="submit">Continue</button>
+</form>
 
 </body>
 </html>
